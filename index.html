@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Renuka Video Editor - Pro</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-black text-white min-h-screen p-4 flex flex-col items-center">
+
+<h1 class="text-3xl font-black mt-4">RENUKA EDITOR <span class="text-orange-500">PRO</span></h1>
+<p class="text-gray-400 mt-2">Real Download Working Version</p>
+
+<!-- Upload -->
+<input type="file" id="upload" accept="video/*" class="mt-6 bg-zinc-800 p-3 rounded-xl w-full max-w-lg">
+
+<!-- Canvas Preview -->
+<canvas id="canvas" class="mt-6 w-full max-w-3xl rounded-2xl bg-zinc-900"></canvas>
+<video id="video" style="display:none" muted playsinline></video>
+
+<!-- Controls -->
+<div class="bg-zinc-900 w-full max-w-3xl p-5 rounded-2xl mt-6 flex flex-wrap gap-4 justify-center">
+  <div>
+    <label>Filter: </label>
+    <select id="filter" class="bg-black p-3 rounded-xl border border-zinc-700">
+      <option value="none">Original</option>
+      <option value="grayscale(100%)">Black & White</option>
+      <option value="sepia(100%)">Vintage</option>
+      <option value="contrast(200%)">High Contrast</option>
+      <option value="blur(3px)">Blur</option>
+    </select>
+  </div>
+  <div>
+    <label>Speed: </label>
+    <select id="speed" class="bg-black p-3 rounded-xl border border-zinc-700">
+      <option value="1">1x Normal</option>
+      <option value="0.5">0.5x Slow Motion</option>
+      <option value="1.5">1.5x Fast</option>
+      <option value="2">2x Super Fast</option>
+    </select>
+  </div>
+</div>
+
+<button id="downloadBtn" class="mt-6 bg-orange-500 hover:bg-orange-400 text-black font-black px-10 py-4 rounded-full text-lg">
+  ⬇️ DOWNLOAD EDITED VIDEO
+</button>
+
+<p id="status" class="mt-4 text-gray-400"></p>
+
+<script>
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let recorder;
+let chunks = [];
+
+// Load video
+document.getElementById('upload').onchange = (e) => {
+  const file = e.target.files[0];
+  video.src = URL.createObjectURL(file);
+  video.onloadedmetadata = () => {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    video.play();
+    render();
+  };
+};
+
+// Render loop with filter
+function render() {
+  if (video.paused || video.ended) return;
+  ctx.filter = document.getElementById('filter').value;
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  requestAnimationFrame(render);
+}
+
+// Speed control
+document.getElementById('speed').onchange = (e) => {
+  video.playbackRate = parseFloat(e.target.value);
+};
+
+// Real Download Logic
+document.getElementById('downloadBtn').onclick = () => {
+  if (!video.src) {
+    alert("Please upload a video first!");
+    return;
+  }
+  document.getElementById('status').textContent = "Recording... Please wait until video finishes, it will auto-download.";
+  chunks = [];
+  video.currentTime = 0;
+  video.play();
+
+  const stream = canvas.captureStream(30);
+  recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+  recorder.ondataavailable = (e) => chunks.push(e.data);
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'renuka-edited-video.webm';
+    a.click();
+    document.getElementById('status').textContent = "✅ Download Completed!";
+  };
+
+  recorder.start();
+  video.onended = () => recorder.stop();
+};
+</script>
+
+</body>
+</html>
