@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Renuka Editor - Ad Watermark System</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-black text-white min-h-screen p-4 flex flex-col items-center">
+<h1 class="text-3xl font-black mt-4">RENUKA EDITOR <span class="text-orange-500">PRO+</span></h1>
+<p class="text-gray-500 text-sm mt-1">Watermark removed after Ad</p>
+
+<input type="file" id="upload" accept="video/*" class="mt-6 bg-zinc-800 p-3 rounded-xl w-full max-w-lg">
+<canvas id="canvas" class="mt-6 w-full max-w-3xl rounded-2xl bg-zinc-900"></canvas>
+<video id="video" style="display:none" muted playsinline></video>
+
+<div id="adBox" class="hidden fixed inset-0 bg-black/90 flex-col items-center justify-center z-50 p-6">
+  <div class="bg-white text-black rounded-[30px] p-8 max-w-sm w-full text-center">
+    <h2 class="font-black text-xl">📺 Ad Playing...</h2>
+    <p class="mt-2 text-gray-500">Your video will be watermark-free after this ad</p>
+    <div class="mt-4 bg-gray-200 rounded-full h-3 overflow-hidden"><div id="adProgress" class="bg-orange-500 h-full" style="width:0%"></div></div>
+    <p id="adTimer" class="mt-3 font-bold">5s</p>
+    <p class="text-xs text-gray-400 mt-2">This is how you will earn money in real app!</p>
+  </div>
+</div>
+
+<div class="bg-zinc-900 w-full max-w-3xl p-5 rounded-2xl mt-6 flex flex-col gap-3">
+  <select id="filter" class="bg-black p-3 rounded-xl border border-zinc-700"><option value="none">Original</option><option value="grayscale(100%)">B&W</option><option value="sepia(100%)">Vintage</option></select>
+  <div class="flex gap-3">
+    <button id="freeDl" class="flex-1 bg-zinc-700 py-3 rounded-xl font-bold">⬇️ Free Download (With Watermark)</button>
+    <button id="proDl" class="flex-1 bg-orange-500 text-black py-3 rounded-xl font-black">💎 Remove Watermark - Watch Ad</button>
+  </div>
+  <p id="status" class="text-center text-gray-400 text-sm"></p>
+</div>
+
+<script>
+const video=document.getElementById('video'), canvas=document.getElementById('canvas'), ctx=canvas.getContext('2d');
+let hasPremium=false, recorder, chunks=[];
+
+document.getElementById('upload').onchange=e=>{
+  video.src=URL.createObjectURL(e.target.files[0]);
+  video.onloadedmetadata=()=>{canvas.width=video.videoWidth; canvas.height=video.videoHeight; video.play(); render();}
+};
+
+function render(){
+  if(video.paused||video.ended) return;
+  ctx.filter=document.getElementById('filter').value;
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  ctx.filter='none';
+  // WATERMARK LOGIC
+  if(!hasPremium){
+    ctx.fillStyle='rgba(255,255,255,0.7)'; ctx.font=`bold ${canvas.width*0.05}px Arial`; ctx.textAlign='center';
+    ctx.shadowColor='black'; ctx.shadowBlur=10;
+    ctx.fillText('RENUKA EDITS', canvas.width/2, canvas.height-60);
+    ctx.font=`${canvas.width*0.03}px Arial`; ctx.fillText('Made with Renuka Editor', canvas.width/2, canvas.height-25);
+  }
+  requestAnimationFrame(render);
+}
+
+function startRecording(){
+  chunks=[]; video.currentTime=0; video.play();
+  const stream=canvas.captureStream(30);
+  recorder=new MediaRecorder(stream,{mimeType:'video/webm'});
+  recorder.ondataavailable=e=>chunks.push(e.data);
+  recorder.onstop=()=>{
+    const blob=new Blob(chunks,{type:'video/webm'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download=hasPremium?'renuka-no-watermark.webm':'renuka-with-watermark.webm'; a.click();
+    document.getElementById('status').textContent=hasPremium?'✅ Downloaded WITHOUT watermark!':'✅ Downloaded WITH watermark - Watch ad to remove!';
+  };
+  recorder.start(); video.onended=()=>recorder.stop();
+}
+
+document.getElementById('freeDl').onclick=()=>{
+  if(!video.src) return alert('Upload video first!'); hasPremium=false; document.getElementById('status').textContent='Downloading with watermark...'; startRecording();
+};
+
+document.getElementById('proDl').onclick=()=>{
+  if(!video.src) return alert('Upload video first!');
+  // SHOW FAKE AD
+  document.getElementById('adBox').classList.remove('hidden');
+  let sec=5, prog=0;
+  let int=setInterval(()=>{
+    sec--; prog+=20;
+    document.getElementById('adTimer').textContent=sec+'s';
+    document.getElementById('adProgress').style.width=prog+'%';
+    if(sec<=0){
+      clearInterval(int); document.getElementById('adBox').classList.add('hidden');
+      hasPremium=true; document.getElementById('status').textContent='Ad finished! Now downloading WITHOUT watermark... 🎉'; startRecording();
+    }
+  },1000);
+};
+</script>
+</body></html>
