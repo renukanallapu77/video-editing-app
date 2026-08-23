@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Renuka Video Editor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-black text-white min-h-screen flex flex-col items-center p-4">
+<h1 class="text-3xl font-black mt-4">RENUKA EDITOR <span class="text-orange-500">PRO</span></h1>
+
+<input type="file" id="up" accept="video/*" class="mt-6 bg-zinc-800 p-3 rounded-xl w-full max-w-lg">
+
+<video id="v" controls class="mt-6 w-full max-w-3xl rounded-2xl bg-zinc-900"></video>
+
+<div class="bg-zinc-900 w-full max-w-3xl p-5 rounded-2xl mt-6 grid grid-cols-2 gap-4">
+<input id="txt" placeholder="Text on video - Eg: Renuka Edits" class="col-span-2 p-3 rounded-xl bg-black border border-zinc-700">
+<label>Speed <select id="spd" class="bg-black p-2 rounded ml-2"><option value="0.5">0.5x Slow</option><option value="1" selected>1x Normal</option><option value="1.5">1.5x Fast</option><option value="2">2x Super Fast</option></select></label>
+<label>Filter <select id="filt" class="bg-black p-2 rounded ml-2"><option value="none">Original</option><option value="grayscale(100%)">Black & White</option><option value="sepia(100%)">Vintage</option><option value="contrast(150%)">High Contrast</option></select></label>
+<button onclick="document.getElementById('v').style.filter=document.getElementById('filt').value" class="bg-white text-black font-bold py-2 rounded-full">Apply Filter</button>
+<button id="dl" class="bg-orange-500 text-black font-bold py-2 rounded-full">Download Edited 🔥</button>
+</div>
+
+<script>
+const v=document.getElementById('v');
+document.getElementById('up').onchange=e=>{v.src=URL.createObjectURL(e.target.files[0]);v.load()};
+document.getElementById('spd').onchange=e=>{v.playbackRate=parseFloat(e.target.value)};
+document.getElementById('dl').onclick=()=>{alert('Editor ready mowa! Next update lo real trim + text export add chesta - FFmpeg version. Ippudu ee version ni portfolio lo add chesuko - Recruiters ki chupinchachu!')};
+</script>
+</body>
+</html>
